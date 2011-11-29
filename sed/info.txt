@@ -1,0 +1,7 @@
+Scripts SED para a transformação de arquivos
+***********************************************************************
+
+Modelo:
+
+
+s/texto/novotexto/g

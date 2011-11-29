@@ -1,0 +1,29 @@
+Packager do Service Desk
+========================
+
+Este componente foi criado como um facilitador para o rollout dos pacotes no CA Service Desk.
+
+Em cada pasta, existe um arquivo info.txt com, adivinha?!?! Informações gerais sobre os arquivos que devem ir naquela pasta.
+
+De maneira geral, temos a estrutura:
+------------------------------------
+bkp                     = Pasta com os backups efetuados pelo packager. Basicamente tabelas que sofreral algum tipo de Userloads e pastas enumeradas no arquivo bkp.txt
+deref                   = Pasta com os derefs que serão usados nos arquivos userload. A regra para criação destes arquivos está na pasta Userloads
+logs                    = Logs de execução dos comandos e seus outputs. O detalhamento dos logs esta na pasta
+nxroot                  = Arquivos a serem copiados para a pasta do CA Service Desk %gc_config%
+sed                     = Arquivos sed que serão aplicados sobre os userloads, conforme regra na pasta Userloads
+UserLoad                = Arquivos que serão carregados via pdm_load, pdm_userload ou pdm_replace, conforme regra na pasta Userloads 
+uteis                   = Alguns BATs e executávies que são utilizados pelo pacote. Mais informações na pasta.
+
+Os arquivos a serem conhecidos e utilizados:
+--------------------------------------------
+run.bat                 = Arquivo BAT a ser executado para o roll-out do pacote
+script.vbs.bak          = Este arquivo não deve existir, mas sempre esqueço do maldito
+bkp.txt                 = Arquivo com as pastas a serem becapeadas
+deletar.txt             = Arquivos a serem deletados da pasta nx_root
+extractToLoad.txt       = Tabelas a serem extraidas para serem carregadas. O formato do arquivo é: Select campos from tabela || Nome do arquivo a ser gerado na pasta userload
+info.txt                = Este arquivo
+readme_xx.txt           = Informações sobre a versão do pacote e o que ele carrega. Deve ser preenchido manualmente.
+y.txt                   = Não mexa nisto. É um patuá.
+script.vbs              = Última versão do script.
+

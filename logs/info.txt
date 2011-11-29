@@ -1,0 +1,35 @@
+Arquivos com os logs de execuçao de cada comando.
+***********************************************************************
+
+
+cmds.log 
+-----------------------------------------------------------------------
+mostra todos os comandos que foram executados pela ferramenta de deploy
+
+Fomato do LOG
+COL1   COL2                  COL3  COL4
+EXEC - 5/1/2008 4:02:28 PM - 1   - pdm_halt
+
+COL1 - Tipo de comando (EXEC = Execução)
+COL2 - Data da execução no formato padrão do SO
+COL3 - Return code do comando
+COL4 - Comando executado
+
+
+deletefiles.log
+-----------------------------------------------------------------------
+Listagem com todos os arquivos que foram excluidos a partir da raiz de
+Instalacao do USvD (NX_ROOT)
+
+bkp.log
+-----------------------------------------------------------------------
+Listagem dos arquivos de backup na pasta BKP criados e sua data 
+
+
+Demais arquivos
+-----------------------------------------------------------------------
+Os demais arquivos sempre serão criados no seguinte formato. Duas extensões
+são possíveis .err (stderr) e .log (stdout) conforme a saida armazenada.
+
+<Data YYYY-MM-DD>--<Hora HH-MM-SS>-<Comando com espaço substituido por underline "_">.<err/log>
+

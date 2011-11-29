@@ -1,0 +1,41 @@
+Arquivos de Load.
+***********************************************************************
+
+Os arquivos desta pasta estão padronizados da seguinte forma:
+
+_U.dat		- Arquivos a serem dereferenciados e carregados com pdm_userload
+_L.dat		- Arquivos a serem dereferenciados e carregados com pdm_load
+_R.dat		- Arquivos a serem dereferenciados e carregados com pdm_replace
+_D.dat		- Arquivos a serem dereferenciados e carregados com pdm_userload -r
+_SU.dat		- Arquivos a serem dereferenciados, tratados com sed e carregados com pdm_userload
+_SL.dat		- Arquivos a serem dereferenciados, tratados com sed e carregados com pdm_load
+_SR.dat		- Arquivos a serem dereferenciados, tratados com sed e carregados com pdm_replace
+_DU.dat		- Arquivos a serem tratados com sed, dereferenciados e carregados com pdm_userload
+_DL.dat		- Arquivos a serem tratados com sed, dereferenciados e carregados com pdm_load
+_DR.dat		- Arquivos a serem tratados com sed, dereferenciados e carregados com pdm_replace
+_DD.dat		- Arquivos a serem tratados com sed, dereferenciados e carregados com pdm_userload -r
+
+.tm?		- Arquivos intermediários entre os dat e load ou userload
+.load		- Arquivos que serão carregados com o uso de pdm_load -i
+.userload	- Arquivos que serão carregados com o uso de pdm_userload
+.replace    - Arquivos que serão carregados com o uso de pdm_replace
+.delete 	- Arquivos a serem carregados como userload -r, ou seja, remove os registros
+
+Algumas premissas devem ser atendidas.
+
+1- Os arquivos não devem conter "." no nome
+
+2- Os arquivos devem ser numerados no formato 00, 01, 02 e por aívai.
+
+3- Para um deref, o arquivo .dat deve ser colocado na pasta Userload e o arquivo .deref na pasta deref e OS DOIS DEVEM TER O MESMO NOME: P. ex: nome_do_arquivo.dat e nome_do_arquivo.deref
+
+4- para atualizar o modelo de objetos, basta extrair a wspcol e wsptbl e colocar o output em dois arquivos nomeados wspcol.userload e wsptbl.userload na pasta Userload. Não esqueça dos arquivos:
+
+Pasta mods:
+  wsp.altercol
+  wsp.altertbl
+  wsp_index.sch
+  wsp_schema.sch
+
+Pasta mods\majic
+  wsp.mods

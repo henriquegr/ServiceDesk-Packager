@@ -1,0 +1,14 @@
+Arquivos DEREF para o uso em scripts
+***********************************************************************
+
+Modelo:
+
+deref
+{
+input=DRFnomedocamponodat
+output=NomedoCamponoArquivodeSaida
+rule="Select id from ca_contact where last_name=?"
+}
+
+
+    
