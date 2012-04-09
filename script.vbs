@@ -444,9 +444,13 @@ Function carregar(arq)
 		
 		    pdm_delete arq
 		
-		else
+		elseif ucase(right(arq, 4)) = "LOAD" then
 		
 			pdm_load arq
+		
+		else
+		
+		  oLogFile.writeLine "O arquivo '" & arq "' nao foi carregado pois nao possui uma extensao valida."
 		
 		end if
 
