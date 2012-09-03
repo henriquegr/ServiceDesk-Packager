@@ -2,7 +2,7 @@
 ' Arquivo: script.vbs
 ' Autor: Henrique Grammelsbacher
 ' Data:   05-feb-08
-' Ult at: 9/4/2010 12:13:32 PM
+' Ult at: 29/6/2012 17:04:43
 ' Description: Pacote de atualizacao generico do SDM
 
 Option Explicit
@@ -70,6 +70,7 @@ else
     wscript.quit 
 End If
 
+verficaAplicacao()
 
 
 'Para o service desk
@@ -886,3 +887,57 @@ function regExists (regKey)
 	Set WSHShell = Nothing
 end function
  
+'***********************************************************************************************************************
+' Funcao: verficaAplicacao ()
+' Autor: Lucas Guimaraes
+' Data: 29-jun-2012
+' Description: Verifica se o pacote jah foi aplicado
+function verficaAplicacao ()
+    Dim oPkgFile
+    Dim pkgName, ctrlFilePath
+    Dim control
+    Dim FileContents, LinePart, LineParts
+    Dim filesys, folder, fso, fileObj
+       
+    ' pega o nome do pacote, que deve ser o nome da pasta
+    Set filesys = CreateObject("Scripting.FileSystemObject")
+    Set folder = filesys.GetFolder(strPath) 
+    pkgName = folder.Name
+    
+    ' inicia variaves
+    ctrlFilePath = "\patches\SdmPkgHistory.txt"
+    control = 0
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    
+    ' verifica se o arquivo de controle existe
+    ' se existe, verifica se o pacote jah foi aplicado
+    If fso.FileExists(strNxroot & ctrlFilePath) Then
+        Set fileObj = fso.GetFile(strNxroot & ctrlFilePath)
+        Set FileContents = fileObj.OpenAsTextStream(1,-2)
+        ' le linha por linha
+        Do While FileContents.AtEndOfStream <> True
+            LineParts = FileContents.readline
+            LinePart = Split(LineParts,"@")
+            ' se achar o nome do pacote, marca a variavel de controle
+            If LinePart(0) = pkgName Then
+                control = 1
+        	End If
+        loop
+        ' sai do script, pois este pacote jah foi aplicado
+        If control = 1 Then
+            wscript.quit
+        Else
+        ' pacote ainda nao foi aplicado, entao registra o nome dele no arquivo de controle
+            Set fileObj = fso.OpenTextFile(strNxroot & ctrlFilePath, 8, true)
+            fileObj.writeLine pkgName & "@" & now()
+        End If
+        FileContents.close
+    Else
+        ' sem controle no sistema, cria o arquivo e registra o nome deste pacote
+        Set oPkgFile = fso.CreateTextFile(strNxroot & ctrlFilePath, True)
+        oPkgFile.writeLine "Arquivo controle dos pacotes aplicados neste sistema - " & now()
+        oPkgFile.writeLine pkgName & "@" & now()
+    End If
+
+
+end function
