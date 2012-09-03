@@ -71,6 +71,7 @@ else
 End If
 
 'verifica se o ambiente jah teve este pacote aplicado. se jah foi, aborta.
+Wscript.Echo "Verificando histórico de aplicações deste ambiente."
 verficaAplicacao()
 
 
@@ -926,11 +927,13 @@ function verficaAplicacao ()
         loop
         ' sai do script, pois este pacote jah foi aplicado
         If control = 1 Then
+			msgbox "Este pacote já foi aplicado neste ambiente. Abortando aplicação.", vbOK, "Erro"
             wscript.quit
         Else
         ' pacote ainda nao foi aplicado, entao registra o nome dele no arquivo de controle
             Set fileObj = fso.OpenTextFile(strNxroot & ctrlFilePath, 8, true)
             fileObj.writeLine pkgName & "@" & now()
+			Wscript.Echo "Este pacote ainda não foi aplicado neste ambiente. Seguindo aplicação."
         End If
         FileContents.close
     Else
@@ -938,6 +941,7 @@ function verficaAplicacao ()
         Set oPkgFile = fso.CreateTextFile(strNxroot & ctrlFilePath, True)
         oPkgFile.writeLine "Arquivo controle dos pacotes aplicados neste sistema - " & now()
         oPkgFile.writeLine pkgName & "@" & now()
+		Wscript.Echo "Este pacote ainda não foi aplicado neste ambiente. Seguindo aplicação."
     End If
 
 
