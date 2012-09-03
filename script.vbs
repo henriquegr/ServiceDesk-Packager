@@ -70,6 +70,7 @@ else
     wscript.quit 
 End If
 
+'verifica se o ambiente jah teve este pacote aplicado. se jah foi, aborta.
 verficaAplicacao()
 
 
@@ -905,7 +906,7 @@ function verficaAplicacao ()
     pkgName = folder.Name
     
     ' inicia variaves
-    ctrlFilePath = "\patches\SdmPkgHistory.txt"
+    ctrlFilePath = "\site\mods\SdmPkgHistory.txt"
     control = 0
     Set fso = CreateObject("Scripting.FileSystemObject")
     
