@@ -2,7 +2,7 @@
 ' Arquivo: script.vbs
 ' Autor: Henrique Grammelsbacher
 ' Data:   05-feb-08
-' Ult at: 9/4/2010 12:13:32 PM
+' Ult at: 29/6/2012 17:04:43
 ' Description: Pacote de atualizacao generico do SDM
 
 Option Explicit
@@ -70,8 +70,6 @@ else
     wscript.quit 
 End If
 
-
-
 'Para o service desk
 runCmd "pdm_halt"
 
@@ -98,13 +96,6 @@ If verificaPdmDown() Then
     if fso.fileExists(strPath & "\Userload\wspcol.userload") then
 		If verificaPdmDBAdmin(strProvider) Then
 
-	        'Faz o backup FULL do banco
-	        'pdm_backup
-	        
-	        'Caso existam tabelas que serão reconstruidas, efetue o extract aqui
-	        'pdm_extract "Events"
-	        'pdm_extract "Spell_Macro"
-
 	        'Load das modificações do modelo de objeto
 	        pdm_userload "wspcol.userload"
 	        pdm_userload "wsptbl.userload"
@@ -123,7 +114,6 @@ If verificaPdmDown() Then
 	    
 	    'O build das tabelas a serem reconstruidas manualmente deve ser feito aqui
 	    'build "Events"
-	    'build "Spell_Macro"
 
 	    'Inicializa em modo de manutencao
 	    runCmd "pdm_d_mgr -s DBADMIN"
@@ -134,7 +124,6 @@ If verificaPdmDown() Then
 
         'Recarrega as tabelas que foram reconstruidas manualmente
         'pdm_restore "Events"
-        'pdm_restore "Spell_Macro"
             		
 		'Carga dos dados
 		carregar_tudo
@@ -249,9 +238,14 @@ End Function
 ' Data: 05-fev-2008
 ' Description: Efetua o userload dos arquivos dat da pasta userload
 Function pdm_deref(script, userload, dat)
-    Dim cmd, hora
+    Dim cmd, hora, re
+    Set re = New RegExp
+    
+    re.pattern = "\\"
+    re.global = true 
+    
     hora = retornaData
-    cmd = "pdm_deref -p -s " & strPath & "\deref\" & script & " " & strPath & "\userload\" & userload & " > " & strPath & "\userload\" & dat & " 2> " & strPath & "\logs\" & hora & "deref_" & userload & ".err"
+    cmd = "pdm_deref -p -s " & strPath & "\deref\" & script & " " & strPath & "\userload\" & userload & " > " & strPath & "\userload\" & dat & " 2> " & strPath & "\logs\" & hora & "deref_" & re.replace(userload, "-") & ".err"
     runCmdwnLog cmd
 End Function
 
@@ -261,9 +255,15 @@ End Function
 ' Data: 15-abr-2008
 ' Description: Executa um script sed na pasta sed/
 Function sed(script, dat, dest)
-    Dim cmd, hora
+    Dim re, cmd, hora
+    Set re = New RegExp
+    
+    re.pattern = "\\"
+    re.global = true 
+
+
     hora = retornaData
-    cmd = strPath & "\uteis\sed -f " & strPath & "\sed\" & script & " " & strPath & "\userload\" & dat & " > " & strPath & "\userload\" & dest & " 2> " & strPath & "\logs\" & hora & "sed_" & dest & ".err"
+    cmd = strPath & "\uteis\sed -f " & strPath & "\sed\" & script & " " & strPath & "\userload\" & dat & " > " & strPath & "\userload\" & dest & " 2> " & strPath & "\logs\" & hora & "sed_" & re.replace(dest, "-") & ".err"
     runCmdwnLog cmd
 End Function
 
@@ -310,9 +310,14 @@ End Function
 ' Description: Efetua o extract de uma tabela
 Function pdm_extract_toload(tabela, arquivo)
     Dim cmd
-    Dim hora
+    Dim hora, re
+    Set re = New RegExp
+    
+    re.pattern = "\\"
+    re.global = true
+    
     hora = retornaData
-    cmd = "pdm_extract -f""" & tabela & """ > " & strPath & "\userload\" & arquivo  & " 2> " & strPath &  "\logs\" & hora & "_" & arquivo & ".log"
+    cmd = "pdm_extract -f""" & tabela & """ > " & strPath & "\userload\" & arquivo  & " 2> " & strPath &  "\logs\" & hora & "_" & re.replace(arquivo, "-") & ".log"
     runCmdwnLog cmd
 End Function
 
@@ -331,17 +336,38 @@ End Function
 ' Description: Identifica, através do nome do arquivo, o que fazer com ele
 Function carregar_tudo()
 
-	dim ofiles, ofile
+	dim ofiles, ofile, ofolder
+    set ofiles = fso.getFolder(strPath & "\UserLoad")
+    
+    'Avalia se existe ao menos um folder na pasta Userload
+    if ofiles.SubFolders.count > 0 then
+    
+    for each ofolder in ofiles.SubFolders
 
-	set ofiles = fso.getFolder(strPath & "\UserLoad")
-	for each ofile in ofiles.files
+        'verifica se o ambiente jah teve este pacote aplicado. se jah foi, aborta.
+        logline "Verificando histórico de aplicações deste ambiente para o pacote '" & ofolder.name & "'."
+        if verficaAplicacao(ofolder.name) = 0 then
 
-		if ofile.name <> "wspcol.userload" and ofile.name <> "wsptbl.userload" and ofile.name <> "info.txt" and ofile.name <> "" then
-		
-			carregar ofile.name
-		
-		end if
-	next 
+        	for each ofile in ofolder.files
+        
+        		if ofile.name <> "wspcol.userload" and ofile.name <> "wsptbl.userload" and ofile.name <> "info.txt" and ofile.name <> "" then
+        		
+        			carregar ofolder.name & "\" & ofile.name
+        		
+        		end if
+        		
+        	next
+             
+        end if
+
+    next
+    
+    else
+        
+        logline("Nao foi encontrada nenhuma pasta dentro de Userloads. Caindo fora sem carregar nada.")
+    
+    end if
+
 
 	
 	set ofiles = nothing
@@ -587,10 +613,17 @@ End Function
 
 Function runCmdwLog(cmd, logfile)
     Dim re, hora, errLog, exeLog, owss, cmd1
+    
 
     Set re = New RegExp
+
+    re.pattern = "\\"
+    re.global = true
+    logfile = re.replace(logfile, "-") 
+
     re.pattern = " "
     re.global = true
+
     
     hora = retornaData
     errLog = """" & strPath & "\logs\" & hora & re.replace(logfile, "_") & ".err" & """"
@@ -886,3 +919,63 @@ function regExists (regKey)
 	Set WSHShell = Nothing
 end function
  
+ 
+function logline(msg)
+
+    WScript.StdOut.WriteLine(">> " & msg)
+    ocmds.writeline "EXEC - " & now & " - 0 - " & msg
+        
+end function
+ 
+'***********************************************************************************************************************
+' Funcao: verficaAplicacao ()
+' Autor: Lucas Guimaraes
+' Data: 29-jun-2012
+' Description: Verifica se o pacote jah foi aplicado
+function verficaAplicacao (folderName)
+    Dim oPkgFile
+    Dim pkgName, ctrlFilePath
+    Dim control
+    Dim FileContents, LinePart, LineParts
+    Dim filesys, folder, fileObj
+    verficaAplicacao = 0   
+    pkgName = folderName
+    
+    ' inicia variaves
+    ctrlFilePath = "\site\mods\SdmPkgHistory.txt"
+    control = 0
+    ' verifica se o arquivo de controle existe
+    ' se existe, verifica se o pacote jah foi aplicado
+    If fso.FileExists(strNxroot & ctrlFilePath) Then
+        Set fileObj = fso.GetFile(strNxroot & ctrlFilePath)
+        Set FileContents = fileObj.OpenAsTextStream(1,-2)
+        ' le linha por linha
+        Do While FileContents.AtEndOfStream <> True
+            LineParts = FileContents.readline
+            LinePart = Split(LineParts,"@")
+            ' se achar o nome do pacote, marca a variavel de controle
+            If LinePart(0) = pkgName Then
+                control = 1
+        	End If
+        loop
+        ' sai do script, pois este pacote jah foi aplicado
+        If control = 1 Then
+			logline "Pacote '" & pkgName &  "' já foi aplicado neste ambiente. Abortando aplicação."
+            verficaAplicacao  = 1
+        Else
+        ' pacote ainda nao foi aplicado, entao registra o nome dele no arquivo de controle
+            Set fileObj = fso.OpenTextFile(strNxroot & ctrlFilePath, 8, true)
+            fileObj.writeLine pkgName & "@" & now()
+			logline "Pacote '" & pkgName &  "' ainda nao aplicado no ambiente. Seguindo com aplicação."
+        End If
+        FileContents.close
+    Else
+        ' sem controle no sistema, cria o arquivo e registra o nome deste pacote
+        Set oPkgFile = fso.CreateTextFile(strNxroot & ctrlFilePath, True)
+        oPkgFile.writeLine "Arquivo controle dos pacotes aplicados neste sistema - " & now()
+        oPkgFile.writeLine pkgName & "@" & now()
+		logline "Pacote '" & pkgName &  "' ainda nao aplicado no ambiente. Seguindo com aplicação."
+    End If
+
+
+end function

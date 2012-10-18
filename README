@@ -1,2 +1,7 @@
+Versao
+- Controle de carga de pacotes
+
 Versao 4/9/2012 10:35:20 AM
 - arquivos com extensao invalida nao sao carregados via PDM_*
+
+
