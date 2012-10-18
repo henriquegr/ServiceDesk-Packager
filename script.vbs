@@ -310,9 +310,14 @@ End Function
 ' Description: Efetua o extract de uma tabela
 Function pdm_extract_toload(tabela, arquivo)
     Dim cmd
-    Dim hora
+    Dim hora, re
+    Set re = New RegExp
+    
+    re.pattern = "\\"
+    re.global = true
+    
     hora = retornaData
-    cmd = "pdm_extract -f""" & tabela & """ > " & strPath & "\userload\" & arquivo  & " 2> " & strPath &  "\logs\" & hora & "_" & arquivo & ".log"
+    cmd = "pdm_extract -f""" & tabela & """ > " & strPath & "\userload\" & arquivo  & " 2> " & strPath &  "\logs\" & hora & "_" & re.replace(arquivo, "-") & ".log"
     runCmdwnLog cmd
 End Function
 
