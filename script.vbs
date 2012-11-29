@@ -86,9 +86,6 @@ If verificaPdmDown() Then
     'Inicializa em modo de manutencao
     runCmd "pdm_d_mgr -s DBADMIN"
     
-    'Extrai as tabelas que futuramente serão carregadas
-    extractFiles
-
     'Backup especifico das tabelas a serem modificadas
     pdm_bkp_userloads   
     
@@ -347,6 +344,9 @@ Function carregar_tudo()
         'verifica se o ambiente jah teve este pacote aplicado. se jah foi, aborta.
         logline "Verificando histórico de aplicações deste ambiente para o pacote '" & ofolder.name & "'."
         if verficaAplicacao(ofolder.name) = 0 then
+
+            'Extrai as tabelas que futuramente serão carregadas "ExtractToLoad"
+            extractFiles
 
         	for each ofile in ofolder.files
         
