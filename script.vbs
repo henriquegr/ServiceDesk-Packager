@@ -344,13 +344,18 @@ Function carregar_tudo()
         'verifica se o ambiente jah teve este pacote aplicado. se jah foi, aborta.
         logline "Verificando histórico de aplicações deste ambiente para o pacote '" & ofolder.name & "'."
         if verficaAplicacao(ofolder.name) = 0 then
-
+        
             'Extrai as tabelas que futuramente serão carregadas "ExtractToLoad"
             extractFiles
-
+            
+            'Aqui reciclamos o DBADMIN, para evitar o bug decorrente de manipular duas vezes a mesma tabela
+            reciclaDBAdmin(strProvider)            
+            
+            'Iterando por todas as pastas de pacotes
         	for each ofile in ofolder.files
-        
-        		if ofile.name <> "wspcol.userload" and ofile.name <> "wsptbl.userload" and ofile.name <> "info.txt" and ofile.name <> "" then
+                
+        		'Carregando arquivo a arquivo
+                if ofile.name <> "wspcol.userload" and ofile.name <> "wsptbl.userload" and ofile.name <> "info.txt" and ofile.name <> "" then
         		
         			carregar ofolder.name & "\" & ofile.name
         		
@@ -652,7 +657,7 @@ Function verificaPdmDown()
     If aguardaHalt(iTimeOut) Then 
         verificaPdmDown = true
     Else
-        msgbox "Não foi possível executar a manutenção. Por favor, reinicie o serviço 'Unicenter Service Desk' manualmente" & vbcrlf & "e envie a pasta logs para avaliacao", 16, "Erro fatal"
+        msgbox "Não foi parar o Service Desk. Por favor, pare o serviço 'Unicenter Service Desk' manualmente" & vbcrlf & " ou aborte e envie a pasta logs para avaliacao", 16, "Erro fatal"
         wscript.quit
     End If 
 End Function
@@ -977,5 +982,34 @@ function verficaAplicacao (folderName)
 		logline "Pacote '" & pkgName &  "' ainda nao aplicado no ambiente. Seguindo com aplicação."
     End If
 
+
+end function
+
+'***********************************************************************************************************************
+' Funcao: verficaAplicacao ()
+' Autor: Henrique Grammelsbacher
+' Data: 11/30/2012 11:00:32 AM
+' Description: Recicla o modo DBADMIN 
+function reciclaDBAdmin(sProvider)
+
+    logline "Reciclando o modo DBADMIN" 
+    
+    'Parando o SD
+    runCmd "pdm_halt"
+    
+    'Verificando se parou mesmo e reinicia, aqui nao tratamos o else, pois o proprio verificaPdmDown jah informa o insucesso e fornece opcoes
+    If verificaPdmDown() Then
+        runCmd "pdm_d_mgr -s DBADMIN"
+    end if
+    
+    'Verifica se reiniciou corretamente
+    if verificaPdmDBAdmin(sProvider) then
+        logline "DBADMIN Reciclado com Sucesso!!"
+    else
+        logline "ERRO AO RECICLAR DBADMIN!!"
+        If Not continua("pdm_d_mgr -s DBADMIN") Then
+            wscript.quit
+        End If         
+    end if
 
 end function
