@@ -413,6 +413,13 @@ Function carregar(arq)
 		pdm_deref strDeref, arq, strArqC
 		pdm_replace strArqC
 
+	elseif mid(arq, len(arq) - 5, 2)  = "_D" then
+
+		strArqC = left(arq, len(arq) - 3) & "delete"
+		pdm_deref strDeref, arq, strArqC
+		pdm_delete strArqC
+
+
 	elseif mid(arq, len(arq) - 5, 1)  = "S" then
 
         if mid(arq, len(arq) - 4, 1)  = "L" then
