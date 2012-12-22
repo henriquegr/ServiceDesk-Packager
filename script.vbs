@@ -481,7 +481,7 @@ Function carregar(arq)
 		
 		else
 		
-		  oLogFile.writeLine "O arquivo '" & arq & "' nao foi carregado pois nao possui uma extensao valida."
+		  logline "O arquivo '" & arq & "' nao foi carregado pois nao possui uma extensao valida."
 		
 		end if
 
