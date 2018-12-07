@@ -5,34 +5,32 @@
 ' Ult at: 29/6/2012 17:04:43
 ' Description: Pacote de atualizacao generico do SDM
 
+
 Option Explicit
 '***********************************************************************************************************************
 'Define as variaveis de execucao do script de atualizacao do Service Desk
-Dim fso, ows, ocmds, oNxEnv, ostd
+Dim fso, ows, ocmds, oNxEnv, ostd, ObjExec, strFromProc
 Dim strNxroot, strSite, strPath, strLogPath, msg, iTimeOut, strProvider, sLinha,strWinVersion
 Set fso = CreateObject("Scripting.FileSystemObject")
 Set ows = CreateObject("WScript.Shell")
 set ostd = WScript.StdOut
 
-'Dependendo do SO, a chave do SDM muda, portanto, vamos na tentativa e erro
-If regExists("HKEY_LOCAL_MACHINE\SOFTWARE\ComputerAssociates\CA Service Desk\Install Path") = True Then 
-    strNxroot = ows.RegRead("HKEY_LOCAL_MACHINE\SOFTWARE\ComputerAssociates\CA Service Desk\Install Path")
-    
-Elseif regExists("HKEY_LOCAL_MACHINE\SOFTWARE\CA Service DESK") = True Then 
-    strNxroot = ows.RegRead("HKEY_LOCAL_MACHINE\SOFTWARE\CA Service DESK\Install Path\Install Path")
-    
-Elseif regExists("HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\ComputerAssociates\CA Service Desk\Install Path") = True Then 
-    strNxroot = ows.RegRead("HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\ComputerAssociates\CA Service Desk\Install Path")
-    
-Else
-    msgbox "Não foi possível encontra a chave de registro do CA Service Desk. Entre em contato com a Interadapt.", vbOK, "Erro"
-    wscript.quit 
-    
-End If 
-
-if right(strNxroot,1) = "\" then
-	strNxroot = mid(strNxroot, 1, len(strNxroot)-1)
+'Adicionado por Roger Bernardi - 07/12/2018
+'Funciona com nomes diretorios com nomes compostos, longos,
+'pois usa o nxcd que usa nomes curtos de diretorios.
+Set ObjExec = ows.Exec("cmd.exe /c nxcd && cd")
+Do
+strFromProc = ObjExec.StdOut.ReadLine()
+if mid(strFromProc, 3,1) = "\" then
+        WScript.Echo "Output is: " & strFromProc
+        strNxroot = strFromProc
 end if
+
+Loop While Not ObjExec.Stdout.atEndOfStream
+if (strNxroot) = "" then
+        msgbox "NÃ£o foi localizar a pasta do CA USD - Fale com a MPHG"
+        wscript.quit
+End If
 strSite = strNxroot & "\site"
 strPath = replace(WScript.ScriptFullName, WScript.ScriptName, "")
 strPath = mid(strPath, 1, len(strPath) - 1)
@@ -62,11 +60,11 @@ If fso.FileExists(strNxroot & "\NX.env") Then
 
     Loop
     if strProvider = "" then
-        msgbox "Não foi possível determinar o provider de banco. Entre em contato com a Interadapt", vbOK, "Erro"
+        msgbox "NÃ£o foi possÃ­vel determinar o provider de banco. Entre em contato com a Interadapt", vbOK, "Erro"
         wscript.quit 
     end if
 else
-    msgbox "Não foi possível encontrar o arquivo NX.env no caminho:" & vbcrlf &  strNxroot & "\NX.env", vbOK, "Erro"
+    msgbox "NÃ£o foi possÃ­vel encontrar o arquivo NX.env no caminho:" & vbcrlf &  strNxroot & "\NX.env", vbOK, "Erro"
     wscript.quit 
 End If
 
@@ -79,7 +77,7 @@ If verificaPdmDown() Then
     'bkp dos arquivos
     bkp
 
-    'Exclui arquivos desnecessários e Atualiza arquivos do Service Desk
+    'Exclui arquivos desnecessÃ¡rios e Atualiza arquivos do Service Desk
     deleteFiles
     copyFiles
 
@@ -89,11 +87,11 @@ If verificaPdmDown() Then
     'Backup especifico das tabelas a serem modificadas
     pdm_bkp_userloads   
     
-    'Caso exista o arquivo de load wspcol.userload, faz atualização do modelo de objeto
+    'Caso exista o arquivo de load wspcol.userload, faz atualizaÃ§Ã£o do modelo de objeto
     if fso.fileExists(strPath & "\Userload\wspcol.userload") then
 		If verificaPdmDBAdmin(strProvider) Then
 
-	        'Load das modificações do modelo de objeto
+	        'Load das modificaÃ§Ãµes do modelo de objeto
 	        pdm_userload "wspcol.userload"
 	        pdm_userload "wsptbl.userload"
 
@@ -102,7 +100,7 @@ If verificaPdmDown() Then
 	        
 	        If verificaPdmDown() Then
 	            
-	            'Faz a publicação do schema
+	            'Faz a publicaÃ§Ã£o do schema
 	            runCmd "pdm_publish"
 	            
 	        End If
@@ -330,7 +328,7 @@ End Function
 ' Funcao: carregar()
 ' Autor: Henrique Grammelsbacher
 ' Data: 2:10 PM 8/26/2008
-' Description: Identifica, através do nome do arquivo, o que fazer com ele
+' Description: Identifica, atravÃ©s do nome do arquivo, o que fazer com ele
 Function carregar_tudo()
 
 	dim ofiles, ofile, ofolder
@@ -342,10 +340,10 @@ Function carregar_tudo()
     for each ofolder in ofiles.SubFolders
 
         'verifica se o ambiente jah teve este pacote aplicado. se jah foi, aborta.
-        logline "Verificando histórico de aplicações deste ambiente para o pacote '" & ofolder.name & "'."
+        logline "Verificando histÃ³rico de aplicaÃ§Ãµes deste ambiente para o pacote '" & ofolder.name & "'."
         if verficaAplicacao(ofolder.name) = 0 then
         
-            'Extrai as tabelas que futuramente serão carregadas "ExtractToLoad"
+            'Extrai as tabelas que futuramente serÃ£o carregadas "ExtractToLoad"
             extractFiles
             
             'Aqui reciclamos o DBADMIN, para evitar o bug decorrente de manipular duas vezes a mesma tabela
@@ -384,7 +382,7 @@ End Function
 ' Funcao: carregar()
 ' Autor: Henrique Grammelsbacher
 ' Data: 05-fev-2008
-' Description: Identifica, através do nome do arquivo, o que fazer com ele
+' Description: Identifica, atravÃ©s do nome do arquivo, o que fazer com ele
 Function carregar(arq)
 
 	dim strDeref, strArqC
@@ -664,7 +662,7 @@ Function verificaPdmDown()
     If aguardaHalt(iTimeOut) Then 
         verificaPdmDown = true
     Else
-        msgbox "Não foi parar o Service Desk. Por favor, pare o serviço 'Unicenter Service Desk' manualmente" & vbcrlf & " ou aborte e envie a pasta logs para avaliacao", 16, "Erro fatal"
+        msgbox "NÃ£o foi parar o Service Desk. Por favor, pare o serviÃ§o 'Unicenter Service Desk' manualmente" & vbcrlf & " ou aborte e envie a pasta logs para avaliacao", 16, "Erro fatal"
         wscript.quit
     End If 
 End Function
@@ -673,12 +671,12 @@ End Function
 ' Funcao: verificaPdmUp()
 ' Autor: Henrique Grammelsbacher
 ' Data: 04-fev-2008
-' Description: Aguarda o tempo em segs definido em iTimeOut pela inicialização do tomcat do Service Desk, ou seja, o pdm_tomcat_nxd foi carregado
+' Description: Aguarda o tempo em segs definido em iTimeOut pela inicializaÃ§Ã£o do tomcat do Service Desk, ou seja, o pdm_tomcat_nxd foi carregado
 Function verificaPdmUp()
     If aguardaStart(iTimeOut, "pdm_tomcat_nxd") Then 
         verificaPdmUp = true
         Else
-        msgbox "Não foi possível executar a manutenção. Por favor, reinicie o serviço 'Unicenter Service Desk' manualmente" & vbcrlf & "e envie a pasta logs para avaliacao", 16, "Erro fatal"
+        msgbox "NÃ£o foi possÃ­vel executar a manutenÃ§Ã£o. Por favor, reinicie o serviÃ§o 'Unicenter Service Desk' manualmente" & vbcrlf & "e envie a pasta logs para avaliacao", 16, "Erro fatal"
         wscript.quit
     End If 
 End Function
@@ -704,7 +702,7 @@ Function verificaPdmDBAdmin(prov)
 	If aguardaStart(iTimeOut, strProc) Then 
         verificaPdmDBAdmin = true
         Else
-        msgbox "Não foi possível iniciar o serviço do Service Desk - Entre em contato com a Interadapt", 16
+        msgbox "NÃ£o foi possÃ­vel iniciar o serviÃ§o do Service Desk - Entre em contato com a Interadapt", 16
         wscript.quit
     End If 
 End Function
@@ -842,7 +840,7 @@ End Function
 Function continua(msg)
     Dim res
     
-    res = msgbox("O comando abaixo foi executado e retornou um código de erro. Deseja continuar?" & vbcrlf & msg, vbOKCancel, "Erro")    
+    res = msgbox("O comando abaixo foi executado e retornou um cÃ³digo de erro. Deseja continuar?" & vbcrlf & msg, vbOKCancel, "Erro")    
     If res = 1 Then
         continua = true
         Else
@@ -972,13 +970,13 @@ function verficaAplicacao (folderName)
         loop
         ' sai do script, pois este pacote jah foi aplicado
         If control = 1 Then
-			logline "Pacote '" & pkgName &  "' já foi aplicado neste ambiente. Abortando aplicação."
+			logline "Pacote '" & pkgName &  "' jÃ¡ foi aplicado neste ambiente. Abortando aplicaÃ§Ã£o."
             verficaAplicacao  = 1
         Else
         ' pacote ainda nao foi aplicado, entao registra o nome dele no arquivo de controle
             Set fileObj = fso.OpenTextFile(strNxroot & ctrlFilePath, 8, true)
             fileObj.writeLine pkgName & "@" & now()
-			logline "Pacote '" & pkgName &  "' ainda nao aplicado no ambiente. Seguindo com aplicação."
+			logline "Pacote '" & pkgName &  "' ainda nao aplicado no ambiente. Seguindo com aplicaÃ§Ã£o."
         End If
         FileContents.close
     Else
@@ -986,7 +984,7 @@ function verficaAplicacao (folderName)
         Set oPkgFile = fso.CreateTextFile(strNxroot & ctrlFilePath, True)
         oPkgFile.writeLine "Arquivo controle dos pacotes aplicados neste sistema - " & now()
         oPkgFile.writeLine pkgName & "@" & now()
-		logline "Pacote '" & pkgName &  "' ainda nao aplicado no ambiente. Seguindo com aplicação."
+		logline "Pacote '" & pkgName &  "' ainda nao aplicado no ambiente. Seguindo com aplicaÃ§Ã£o."
     End If
 
 
